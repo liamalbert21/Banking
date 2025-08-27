@@ -1,0 +1,96 @@
+import random, hashlib, datetime
+
+class BankAccount:
+    def __init__(self, account_holder, balance, is_locked):
+        self.account_holder = account_holder
+        self.balance = balance
+        self.transactions = [{'Type': 'Initialization', 'Amount': balance, 'Timestamp': datetime.datetime.now()}]
+        self.is_locked = is_locked
+
+    def deposit(self, amount, is_transfer = False):
+        if amount <= 0:
+            print('Error: Deposit amount must be positive\n')
+        else:
+            self.balance += amount
+            self.transactions.append({'Type': 'Deposit', 'Amount': amount, 'Timestamp': datetime.datetime.now()})
+            if not is_transfer:
+                print(f'Success. New balance: ${self.balance:.2f}\n')
+
+    def withdraw(self, amount, is_transfer = False):
+        if amount <= 0:
+            print('Error: Withdrawal amount must be positive\n')
+            if is_transfer:
+                return False
+        elif amount > self.balance:
+            print('Error: Withdrawal amount cannot exceed balance\n')
+            if is_transfer:
+                return False
+        else:
+            self.balance -= amount
+            self.transactions.append({'Type': 'Withdrawal', 'Amount': amount, 'Timestamp': datetime.datetime.now()})
+            if not is_transfer:
+                print(f'Success. New balance: ${self.balance:.2f}\n')
+        return True
+
+    def check_balance(self):
+        print(f'Current balance: ${self.balance:.2f}\n')
+
+    def print_statement(self):
+        if len(self.transactions) != 0:
+            for i, x in enumerate(self.transactions):
+                print(f'Transaction {i+1}:')
+                for k, v in x.items():
+                    if k == 'Type':
+                        print(f'- {k}: {v}')
+                    elif k == 'Amount':
+                        print(f'- {k}: ${v:.2f}')
+                    else:
+                        print(f'- {k}: {v.strftime("%Y-%m-%d %H:%M:%S")}')
+                print()
+        else:
+            print('No transactions exist\n')
+
+class Bank:
+    __stored_accounts = {}
+    __available_accounts = set(range(1000000, 10000000))
+    __admin_password = hashlib.sha512('password'.encode()).digest()
+
+    @classmethod
+    def create_account(cls, account_holder, initial_deposit, is_locked = False, is_import = False):
+        if initial_deposit > 0:
+            account_number = random.sample(list(cls.__available_accounts), 1)[0]
+            cls.__available_accounts.remove(account_number)
+            cls.__stored_accounts[account_number] = BankAccount(account_holder, initial_deposit, is_locked)
+            if not is_import:
+                print(f'Success. Account number: {account_number}\n')
+        elif initial_deposit <= 0:
+            print('Error: Deposit amount must be positive\n')
+
+    @classmethod
+    def get_account(cls, account_number):
+        try:
+            return cls.__stored_accounts[account_number]
+        except KeyError:
+            print('Error: No such account exists\n')
+
+    @classmethod
+    def get_password(cls):
+        return cls.__admin_password
+
+    @classmethod
+    def transfer(cls, origin, destination, amount):
+        result = cls.__stored_accounts[origin].withdraw(amount, True)
+        if result:
+            cls.__stored_accounts[destination].deposit(amount, True)
+            print('Success.\n')
+
+    @classmethod
+    def remove_account(cls, account_number):
+        cls.__stored_accounts.pop(account_number)
+        cls.__available_accounts.add(account_number)
+        print('Success.\n')
+
+    @classmethod
+    def change_password(cls, password):
+        cls.__admin_password = hashlib.sha512(password.encode()).digest()
+        print('Success.\n')
