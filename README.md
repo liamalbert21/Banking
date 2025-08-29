@@ -5,7 +5,7 @@ Banking project demonstrating principles of OOP and extended module use in Pytho
 - Add Account Pin: **IN PROGRESS**
 - Deposit: Increases account balance by specified amount
 - Withdraw: Decreases account balance by specified amount
-- Transfer: Incrases origin account balance and decrease destination account balance by specficied amount
+- Transfer: Increases origin account balance and decreases destination account balance by specficied amount
 - Check Balance: Views account balance
 - Print Statement: Views account transactions and itialization with corresponding dates and times
 - Admin: Presents login interface for admin panel
@@ -15,14 +15,15 @@ Banking project demonstrating principles of OOP and extended module use in Pytho
 - Import Data: Imports user data from .xlsx file
 - Export Database: Exports account data as .xlsx
 - Remove Account: Removes account from database
-- Create New Password: Modifies the administrator password
-- Lock/Unlock Account: Locks/unlcoks account. Locked accounts are restricted from account-specific actions
+- Create New Password: Modifies administrator password
+- Lock/Unlock Account: Locks/unlcoks account
 - Logout: Returns to user interface
 
 **Notes:**
 - Admin password is hashed using SHA-512
-- Account name limited to alphabetic characters and whitespace
-- "Import Data" function is currently inefficient for datasets containing > 100 accounts
+- Account name is limited to alphabetic characters and whitespace
+- Locked accounts are restricted from account-specific actions
+- "Import Data" function is inefficient for datasets containing > 100 accounts
 
 **Future Plans:**
 - Require passwords for data functions
@@ -30,4 +31,4 @@ Banking project demonstrating principles of OOP and extended module use in Pytho
 - Optimize "Import Data" function
 - Add GUI
 - Encrypt/hash stored database
-- Continual optimization/removal of redundant code
+- Continual optimization/redundant code removal
