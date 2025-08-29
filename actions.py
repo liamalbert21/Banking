@@ -1,5 +1,13 @@
 import re, openpyxl, hashlib, bank_data
 
+def check_account(account):
+    if not account:
+        return False
+    elif account.is_locked:
+        print('Error: Account is locked\n')
+        return False
+    return True
+
 def get_input(prompt, cast):
     while True:
         try:
@@ -11,22 +19,19 @@ def new_account():
     name = get_input("Enter account holder's name: ", str)
     valid_name = True if not re.search(r'[^a-zA-Z\s]', name) else False
     if not valid_name:
-        print("Error: Name must only contain alphabetic characters and spaces\n")
+        print("Error: Name must only contain alphabetic characters and whitespace\n")
         return
     start = get_input('Enter initial deposit: $', float)
     bank_data.Bank.create_account(name, start)
 
-def change_funds(add):
+def change_funds(is_deposit):
     account_number = get_input('Enter account number: ', int)
     account = bank_data.Bank.get_account(account_number)
-    if not account:
+    if not check_account(account):
         return
-    elif account.is_locked:
-        print('Error: Account is locked\n')
-        return
-    action = 'deposit' if add else 'withdrawal'
+    action = 'deposit' if is_deposit else 'withdrawal'
     amount = get_input(f'Enter {action} amount: $', float)
-    if add:
+    if is_deposit:
         account.deposit(amount)
     else:
         account.withdraw(amount)
@@ -34,36 +39,23 @@ def change_funds(add):
 def move_funds():
     origin = get_input('Enter origin account number: ', int)
     account_1 = bank_data.Bank.get_account(origin)
-    if not account_1:
-        return
-    elif account_1.is_locked:
-        print('Error: Account is locked\n')
+    if not check_account(account_1):
         return
     destination = get_input('Enter destination account number: ', int)
     account_2 = bank_data.Bank.get_account(destination)
-    if not account_2:
-        return
-    elif account_2.is_locked:
-        print('Error: Account is locked\n')
+    if not check_account(account_2):
         return
     amount = get_input('Enter transfer amount: $', float)
     bank_data.Bank.transfer(origin, destination, amount)
 
-def view_balance():
+def view(is_balance):
     account_number = get_input('Enter account number: ', int)
     account = bank_data.Bank.get_account(account_number)
     if account:
         if account.is_locked:
             print('Error: Account is locked\n')
-        else:
+        elif is_balance:
             account.check_balance()
-
-def view_statement():
-    account_number = get_input('Enter account number: ', int)
-    account = bank_data.Bank.get_account(account_number)
-    if account:
-        if account.is_locked:
-            print('Error: Account is locked\n')
         else:
             account.print_statement()
 
@@ -81,21 +73,19 @@ def import_export(is_import):
     if is_import:
         path = get_input('Enter file path: ', str)
         try:
-            workbook = openpyxl.load_workbook(path.strip(' "'))
             print('In progress...')
-            worksheet = workbook.active
+            worksheet = openpyxl.load_workbook(path.strip(' "'), data_only = True).active
             max_row = worksheet.max_row
             for row in range(2, max_row + 1):
                 name = worksheet.cell(row, 1).value
                 start = worksheet.cell(row, 2).value
-                status = False if worksheet.cell(row, 4).value else True
+                status = True if worksheet.cell(row, 4).value else False
                 bank_data.Bank.create_account(name, start, status, True)
             print('Success.\n')
         except:
             print('Error: Invalid path or file format\n')
     else:
-        print('In development\n')
-        # Export file with 4 columns: Account Name, Balance, Status, and Status (B) (Binary Status)
+        bank_data.Bank.export_database()
 
 def discard_account():
     account_number = get_input('Enter account number: ', int)

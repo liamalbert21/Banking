@@ -1,4 +1,5 @@
-import random, hashlib, datetime
+import random, hashlib, datetime, openpyxl
+from openpyxl.styles import Font, Alignment
 
 class BankAccount:
     def __init__(self, account_holder, balance, is_locked):
@@ -93,4 +94,25 @@ class Bank:
     @classmethod
     def change_password(cls, password):
         cls.__admin_password = hashlib.sha512(password.encode()).digest()
+        print('Success.\n')
+
+    @classmethod
+    def export_database(cls):
+        workbook = openpyxl.Workbook()
+        worksheet = workbook.active
+        worksheet.title = 'Database'
+        headers = ('Account Number', 'Account Name', 'Balance', 'Status', 'Status (B)')
+        for i in range(len(headers)):
+            cell = worksheet.cell(1, i + 1, headers[i])
+            cell.font = Font(bold = True)
+            cell.alignment = Alignment(horizontal = 'center')
+        for row, (account_number, account) in enumerate(cls.__stored_accounts.items()):
+            if account.is_locked:
+                status_b = 1; status = 'Locked'
+            else:
+                status_b = 0; status = 'Unlocked'
+            data = (account_number, account.account_holder, account.balance, status, status_b)
+            for i in range(len(data)):
+                worksheet.cell(row + 2, i + 1, data[i])
+        workbook.save('Database.xlsx')
         print('Success.\n')

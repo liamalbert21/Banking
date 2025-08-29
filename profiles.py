@@ -16,7 +16,7 @@ def user():
             case 2:
                 # Add Account Pin
                 # Verify corresponding account name before creating a pin
-                pass
+                print('In Progress\n')
             case 3:
                 actions.change_funds(True)
             case 4:
@@ -24,9 +24,9 @@ def user():
             case 5:
                 actions.move_funds()
             case 6:
-                actions.view_balance()
+                actions.view(True)
             case 7:
-                actions.view_statement()
+                actions.view(False)
             case 8:
                 print('Enter admin password. You have 3 attempts before lockout')
                 if actions.login():
