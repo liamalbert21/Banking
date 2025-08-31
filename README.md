@@ -1,8 +1,8 @@
-Banking project demonstrating principles of OOP and extended module use in Python. Current functionality is as follows (updated 8/29/2025):
+Back-end banking project demonstrating principles of OOP and extended module use in Python. Current functionality is as follows (updated 8/30/2025):
 
 **User Interface:**
 - Create Account: Instantiates account object with random account number, specified balance, and unlocked status attributes
-- Add Account Pin: **IN PROGRESS**
+- Add Account Pin: Adds/removes account-specific pin
 - Deposit: Increases account balance by specified amount
 - Withdraw: Decreases account balance by specified amount
 - Transfer: Increases origin account balance and decreases destination account balance by specficied amount
@@ -13,22 +13,22 @@ Banking project demonstrating principles of OOP and extended module use in Pytho
 
 **Admin Interface:**
 - Import Data: Imports user data from .xlsx file
-- Export Database: Exports account data as .xlsx
+- Export Database: Exports account data as .xlsx file
 - Remove Account: Removes account from database
 - Create New Password: Modifies administrator password
-- Lock/Unlock Account: Locks/unlcoks account
+- Lock/Unlock Account: Locks/unlocks account
 - Logout: Returns to user interface
 
 **Notes:**
-- Admin password is hashed using SHA-512
-- Account name is limited to alphabetic characters and whitespace
-- Locked accounts are restricted from account-specific actions
+- Administrator password is hashed using SHA-512
+- Account names are limited to alphabetic characters and whitespace
+- Account pins are limited to numbers
+- Locked accounts are restricted from user-specific actions
+- User-specific actions are locked behind pin for accounts with pin attribute 
 - "Import Data" function is inefficient for datasets containing > 100 accounts
 
 **Future Plans:**
-- Require passwords for data functions
-- Add functionality for "Add Account Pin" option
 - Optimize "Import Data" function
-- Add GUI
+- Add GUI/design website (import HTML/CSS for layout, SQL for cloud data)
 - Encrypt/hash stored database
 - Continual optimization/redundant code removal
