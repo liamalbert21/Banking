@@ -7,6 +7,7 @@ class BankAccount:
         self.balance = balance
         self.transactions = [{'Type': 'Initialization', 'Amount': balance, 'Timestamp': datetime.datetime.now()}]
         self.is_locked = is_locked
+        self.pin = None
 
     def deposit(self, amount, is_transfer = False):
         if amount <= 0:

@@ -1,4 +1,21 @@
-import re, openpyxl, hashlib, bank_data
+import re, hashlib, openpyxl, bank_data
+from openpyxl.utils.exceptions import InvalidFileException
+
+def login(pin = None, admin_login = False):
+    if pin:
+        verify = pin; input_type = int
+    else:
+        verify = bank_data.Bank.get_password(); input_type = str
+    for x in range(3):
+        attempt = get_input(f'Attempt {x+1}: ', input_type)
+        if not pin:
+            if hashlib.sha512(attempt.encode()).digest() == verify:
+                return True
+        elif attempt == verify:
+            return True
+        print('Incorrect')
+    print('Login failed. User lockout\n') if admin_login else print('Login failed\n')
+    return False
 
 def check_account(account):
     if not account:
@@ -6,6 +23,10 @@ def check_account(account):
     elif account.is_locked:
         print('Error: Account is locked\n')
         return False
+    if account.pin:
+        print('Enter account pin. You have three attempts')
+        if not login(pin = account.pin):
+            return False
     return True
 
 def get_input(prompt, cast):
@@ -24,17 +45,33 @@ def new_account():
     start = get_input('Enter initial deposit: $', float)
     bank_data.Bank.create_account(name, start)
 
-def change_funds(is_deposit):
+def add_remove_pin():
     account_number = get_input('Enter account number: ', int)
     account = bank_data.Bank.get_account(account_number)
     if not check_account(account):
         return
-    action = 'deposit' if is_deposit else 'withdrawal'
-    amount = get_input(f'Enter {action} amount: $', float)
-    if is_deposit:
-        account.deposit(amount)
+    if account.pin:
+        account.pin = None
     else:
-        account.withdraw(amount)
+        pin = get_input('Enter desired pin: ', int)
+        verify = get_input('Re-enter desired pin: ', int)
+        if verify == pin:
+            account.pin = pin
+        else:
+            print('Error: Pins do not match\n')
+            return
+    print('Success.\n')
+
+def change_funds(is_deposit):
+    account_number = get_input('Enter account number: ', int)
+    account = bank_data.Bank.get_account(account_number)
+    if check_account(account):
+        action = 'deposit' if is_deposit else 'withdrawal'
+        amount = get_input(f'Enter {action} amount: $', float)
+        if is_deposit:
+            account.deposit(amount)
+        else:
+            account.withdraw(amount)
 
 def move_funds():
     origin = get_input('Enter origin account number: ', int)
@@ -51,41 +88,33 @@ def move_funds():
 def view(is_balance):
     account_number = get_input('Enter account number: ', int)
     account = bank_data.Bank.get_account(account_number)
-    if account:
-        if account.is_locked:
-            print('Error: Account is locked\n')
-        elif is_balance:
+    if check_account(account):
+        if is_balance:
             account.check_balance()
         else:
             account.print_statement()
 
-def login():
-    current_password = bank_data.Bank.get_password()
-    for x in range(3):
-        attempt = hashlib.sha512(get_input(f'Attempt {x+1}: ', str).encode()).digest()
-        if attempt == current_password:
-            return True
-        else:
-            print('Incorrect')
-    return False
-
 def import_export(is_import):
-    if is_import:
-        path = get_input('Enter file path: ', str)
-        try:
-            print('In progress...')
-            worksheet = openpyxl.load_workbook(path.strip(' "'), data_only = True).active
-            max_row = worksheet.max_row
-            for row in range(2, max_row + 1):
-                name = worksheet.cell(row, 1).value
-                start = worksheet.cell(row, 2).value
-                status = True if worksheet.cell(row, 4).value else False
-                bank_data.Bank.create_account(name, start, status, True)
-            print('Success.\n')
-        except:
-            print('Error: Invalid path or file format\n')
-    else:
-        bank_data.Bank.export_database()
+    print('Enter admin password. You have 3 attempts')
+    if login():
+        if is_import:
+            path = get_input('Enter file path: ', str)
+            try:
+                worksheet = openpyxl.load_workbook(path.strip(' "'), data_only = True).active
+                print('In progress...')
+                max_row = worksheet.max_row
+                for row in range(2, max_row + 1):
+                    name = worksheet.cell(row, 1).value
+                    start = worksheet.cell(row, 2).value
+                    status = True if worksheet.cell(row, 4).value else False
+                    bank_data.Bank.create_account(name, start, status, True)
+                print('Success.\n')
+            except FileNotFoundError:
+                print('Error: Invalid path\n')
+            except InvalidFileException:
+                print('Error: Invalid file format\n')
+        else:
+            bank_data.Bank.export_database()
 
 def discard_account():
     account_number = get_input('Enter account number: ', int)
@@ -97,22 +126,18 @@ def discard_account():
         print('Enter admin password to confirm deletion. You have 3 attempts')
         if login():
             bank_data.Bank.remove_account(account_number)
-        else:
-            print()
     else:
         print('Error: Accounts do not match\n')
 
 def new_password():
-    print('Enter current password. You have 3 attempts')
-    if not login():
-        print()
-        return
-    desired_password = get_input('Enter new password: ', str)
-    verification = get_input('Re-enter new password: ', str)
-    if desired_password == verification:
-        bank_data.Bank.change_password(desired_password)
-    else:
-        print('Error: Passwords do not match\n')
+    print('Enter current admin password. You have 3 attempts')
+    if login():
+        desired_password = get_input('Enter new password: ', str)
+        verification = get_input('Re-enter new password: ', str)
+        if desired_password == verification:
+            bank_data.Bank.change_password(desired_password)
+        else:
+            print('Error: Passwords do not match\n')
 
 def lock_account():
     account_number = get_input('Enter account number: ', int)
@@ -124,10 +149,8 @@ def lock_account():
         access = 'locked' if account.is_locked else 'unlocked'
         print(f'This account is {access}')
         print('Enter admin password to change account status. You have 3 attempts')
-        if not login():
-            print()
-            return
-        account.is_locked = not account.is_locked
-        print('Success.\n')
+        if login():
+            account.is_locked = not account.is_locked
+            print('Success.\n')
     else:
         print('Error: Accounts do not match\n')

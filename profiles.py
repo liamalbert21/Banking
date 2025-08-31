@@ -1,7 +1,7 @@
 import actions
 
 def user():
-    user_options = ('Create Account', 'Add Account Pin', 'Deposit', 'Withdraw', 'Transfer',
+    user_options = ('Create Account', 'Add/Remove Pin', 'Deposit', 'Withdraw', 'Transfer',
                     'Check Balance', 'Print Statement', 'Admin', 'Exit')
     print()
     while True:
@@ -14,9 +14,7 @@ def user():
             case 1:
                 actions.new_account()
             case 2:
-                # Add Account Pin
-                # Verify corresponding account name before creating a pin
-                print('In Progress\n')
+                actions.add_remove_pin()
             case 3:
                 actions.change_funds(True)
             case 4:
@@ -29,10 +27,9 @@ def user():
                 actions.view(False)
             case 8:
                 print('Enter admin password. You have 3 attempts before lockout')
-                if actions.login():
+                if actions.login(admin_login = True):
                     admin()
                 else:
-                    print('Login failed. User lockout')
                     return
             case 9:
                 print('Thank you for banking with us!')
