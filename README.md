@@ -1,13 +1,14 @@
-Back-end banking project demonstrating principles of OOP and extended module use in Python. Current functionality is as follows (updated 8/30/2025):
+Back-end banking project demonstrating principles of OOP and extended module use in Python.
+Current functionality is as follows (updated 8/30/2025):
 
 **User Interface:**
 - Create Account: Instantiates account object with random account number, specified balance, and unlocked status attributes
 - Add Account Pin: Adds/removes account-specific pin
 - Deposit: Increases account balance by specified amount
 - Withdraw: Decreases account balance by specified amount
-- Transfer: Increases origin account balance and decreases destination account balance by specficied amount
+- Transfer: Increases origin account balance and decreases destination account balance by specified amount
 - Check Balance: Views account balance
-- Print Statement: Views account transactions and itialization with corresponding dates and times
+- Print Statement: Views account transactions and initialization with corresponding dates and times
 - Admin: Presents login interface for admin panel
 - Exit: Ends the program
 

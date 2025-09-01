@@ -14,20 +14,8 @@ def login(pin = None, admin_login = False):
         elif attempt == verify:
             return True
         print('Incorrect')
-    print('Login failed. User lockout\n') if admin_login else print('Login failed\n')
+    print('Login failed. User lockout') if admin_login else print('Login failed.\n')
     return False
-
-def check_account(account):
-    if not account:
-        return False
-    elif account.is_locked:
-        print('Error: Account is locked\n')
-        return False
-    if account.pin:
-        print('Enter account pin. You have three attempts')
-        if not login(pin = account.pin):
-            return False
-    return True
 
 def get_input(prompt, cast):
     while True:
@@ -35,6 +23,35 @@ def get_input(prompt, cast):
             return cast(input(prompt))
         except ValueError:
             print('Error: Invalid input')
+
+def verify_account(n = 1, confirm_number = False, need_number = False):
+    def decorator(func):
+        def wrapper(*args):
+            send = []
+            for i in range(n):
+                account_type = ' ' if n == 1 else ' origin ' if n == 2 and i == 0 else ' destination '
+                account_number = get_input(f'Enter{account_type}account number: ', int)
+                account = bank_data.Bank.get_account(account_number)
+                if not account:
+                    return
+                elif account.is_locked:
+                    print('Error: Account is locked\n')
+                    return
+                elif account.pin:
+                    print('Enter account pin. You have three attempts')
+                    if not login(pin = account.pin):
+                        return
+                if confirm_number:
+                    if account_number != get_input('Re-enter account number: ', int):
+                        print('Error: Accounts do not match\n')
+                        return
+                if need_number:
+                    send.append(account_number)
+                else:
+                    send.append(account_number)
+            func(*args, *send)
+        return wrapper
+    return decorator
 
 def new_account():
     name = get_input("Enter account holder's name: ", str)
@@ -45,11 +62,8 @@ def new_account():
     start = get_input('Enter initial deposit: $', float)
     bank_data.Bank.create_account(name, start)
 
-def add_remove_pin():
-    account_number = get_input('Enter account number: ', int)
-    account = bank_data.Bank.get_account(account_number)
-    if not check_account(account):
-        return
+@verify_account()
+def add_remove_pin(account):
     if account.pin:
         account.pin = None
     else:
@@ -62,37 +76,44 @@ def add_remove_pin():
             return
     print('Success.\n')
 
-def change_funds(is_deposit):
-    account_number = get_input('Enter account number: ', int)
-    account = bank_data.Bank.get_account(account_number)
-    if check_account(account):
-        action = 'deposit' if is_deposit else 'withdrawal'
-        amount = get_input(f'Enter {action} amount: $', float)
-        if is_deposit:
-            account.deposit(amount)
-        else:
-            account.withdraw(amount)
+@verify_account()
+def change_funds(is_deposit, account):
+    action = 'deposit' if is_deposit else 'withdrawal'
+    amount = get_input(f'Enter {action} amount: $', float)
+    if is_deposit:
+        account.deposit(amount)
+    else:
+        account.withdraw(amount)
 
-def move_funds():
-    origin = get_input('Enter origin account number: ', int)
-    account_1 = bank_data.Bank.get_account(origin)
-    if not check_account(account_1):
-        return
-    destination = get_input('Enter destination account number: ', int)
-    account_2 = bank_data.Bank.get_account(destination)
-    if not check_account(account_2):
-        return
+@verify_account(n = 2)
+def move_funds(origin, destination):
     amount = get_input('Enter transfer amount: $', float)
-    bank_data.Bank.transfer(origin, destination, amount)
+    result = origin.withdraw(amount, True)
+    if result:
+        destination.deposit(amount, True)
 
-def view(is_balance):
-    account_number = get_input('Enter account number: ', int)
-    account = bank_data.Bank.get_account(account_number)
-    if check_account(account):
-        if is_balance:
-            account.check_balance()
-        else:
-            account.print_statement()
+@verify_account()
+def view(is_balance, account):
+    if is_balance:
+        account.check_balance()
+    else:
+        account.print_statement()
+
+@verify_account(confirm_number = True, need_number = True)
+def discard_account(account_number):
+    print('Warning: This action is irreversible')
+    print('Enter admin password to confirm deletion. You have 3 attempts')
+    if login():
+        bank_data.Bank.remove_account(account_number)
+
+@verify_account(confirm_number = True)
+def lock_account(account):
+    access = 'locked' if account.is_locked else 'unlocked'
+    print(f'This account is {access}')
+    print('Enter admin password to change account status. You have 3 attempts')
+    if login():
+        account.is_locked = not account.is_locked
+        print('Success.\n')
 
 def import_export(is_import):
     print('Enter admin password. You have 3 attempts')
@@ -116,19 +137,6 @@ def import_export(is_import):
         else:
             bank_data.Bank.export_database()
 
-def discard_account():
-    account_number = get_input('Enter account number: ', int)
-    if not bank_data.Bank.get_account(account_number):
-        return
-    verification = get_input('Re-enter account number: ', int)
-    if account_number == verification:
-        print('Warning: This change is irreversible')
-        print('Enter admin password to confirm deletion. You have 3 attempts')
-        if login():
-            bank_data.Bank.remove_account(account_number)
-    else:
-        print('Error: Accounts do not match\n')
-
 def new_password():
     print('Enter current admin password. You have 3 attempts')
     if login():
@@ -138,19 +146,3 @@ def new_password():
             bank_data.Bank.change_password(desired_password)
         else:
             print('Error: Passwords do not match\n')
-
-def lock_account():
-    account_number = get_input('Enter account number: ', int)
-    account = bank_data.Bank.get_account(account_number)
-    verification = get_input('Re-enter account number: ', int)
-    if account_number == verification:
-        if not account:
-            return
-        access = 'locked' if account.is_locked else 'unlocked'
-        print(f'This account is {access}')
-        print('Enter admin password to change account status. You have 3 attempts')
-        if login():
-            account.is_locked = not account.is_locked
-            print('Success.\n')
-    else:
-        print('Error: Accounts do not match\n')

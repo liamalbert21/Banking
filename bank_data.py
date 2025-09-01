@@ -5,7 +5,12 @@ class BankAccount:
     def __init__(self, account_holder, balance, is_locked):
         self.account_holder = account_holder
         self.balance = balance
-        self.transactions = [{'Type': 'Initialization', 'Amount': balance, 'Timestamp': datetime.datetime.now()}]
+        self.transactions = [{
+            'Type': 'Initialization',
+            'Amount': balance,
+            'Balance': balance,
+            'Timestamp': datetime.datetime.now()
+        }]
         self.is_locked = is_locked
         self.pin = None
 
@@ -14,9 +19,13 @@ class BankAccount:
             print('Error: Deposit amount must be positive\n')
         else:
             self.balance += amount
-            self.transactions.append({'Type': 'Deposit', 'Amount': amount, 'Timestamp': datetime.datetime.now()})
-            if not is_transfer:
-                print(f'Success. New balance: ${self.balance:.2f}\n')
+            self.transactions.append({
+                'Type': 'Deposit',
+                'Amount': amount,
+                'Balance': self.balance,
+                'Timestamp': datetime.datetime.now()
+            })
+            print(f'Success. New balance: ${self.balance:.2f}\n') if not is_transfer else print('Success.\n')
 
     def withdraw(self, amount, is_transfer = False):
         if amount <= 0:
@@ -29,7 +38,12 @@ class BankAccount:
                 return False
         else:
             self.balance -= amount
-            self.transactions.append({'Type': 'Withdrawal', 'Amount': amount, 'Timestamp': datetime.datetime.now()})
+            self.transactions.append({
+                'Type': 'Withdrawal',
+                'Amount': amount,
+                'Balance': self.balance,
+                'Timestamp': datetime.datetime.now()
+            })
             if not is_transfer:
                 print(f'Success. New balance: ${self.balance:.2f}\n')
         return True
@@ -44,7 +58,7 @@ class BankAccount:
                 for k, v in x.items():
                     if k == 'Type':
                         print(f'- {k}: {v}')
-                    elif k == 'Amount':
+                    elif k in ('Amount', 'Balance'):
                         print(f'- {k}: ${v:.2f}')
                     else:
                         print(f'- {k}: {v.strftime("%Y-%m-%d %H:%M:%S")}')
@@ -78,13 +92,6 @@ class Bank:
     @classmethod
     def get_password(cls):
         return cls.__admin_password
-
-    @classmethod
-    def transfer(cls, origin, destination, amount):
-        result = cls.__stored_accounts[origin].withdraw(amount, True)
-        if result:
-            cls.__stored_accounts[destination].deposit(amount, True)
-            print('Success.\n')
 
     @classmethod
     def remove_account(cls, account_number):
