@@ -39,7 +39,7 @@ def user():
 
 def admin():
     admin_options = ('Import Data', 'Export Database', 'Close User Account',
-                     'Change Admin Password', 'Lock/Unlock Account', 'Logout')
+                     'Change Admin Password', 'Force Remove Pin', 'Lock/Unlock Account', 'Logout')
     print()
     while True:
         print('=== Admin Panel ===')
@@ -57,8 +57,10 @@ def admin():
             case 4:
                 actions.new_password()
             case 5:
-                actions.lock_account()
+                actions.force_remove_pin()
             case 6:
+                actions.lock_account()
+            case 7:
                 print()
                 return
             case _:
