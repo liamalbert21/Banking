@@ -7,7 +7,7 @@ Abstract: Back-end banking project demonstrating principles of OOP and extended 
 Current functionality is as follows:
 
 **User Interface:**
-- Create Account: Instantiates account object with random account number, specified balance, and unlocked status attributes
+- Create Account: Instantiates account object with random account number, balance, and unlocked status attributes
 - Add Account Pin: Adds/removes account-specific pin
 - Deposit: Increases account balance by specified amount
 - Withdraw: Decreases account balance by specified amount

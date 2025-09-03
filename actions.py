@@ -23,7 +23,7 @@ def get_input(prompt, cast):
         try:
             return cast(input(prompt))
         except ValueError:
-            print('Error: Invalid input')
+            print('Error: Invalid input.')
 
 def verify_account(n = 1, make_pin = False, admin = False, confirm_number = False, need_number = False):
     def decorator(func):
@@ -41,7 +41,7 @@ def verify_account(n = 1, make_pin = False, admin = False, confirm_number = Fals
                 if not account:
                     return
                 elif account.is_locked and not admin:
-                    print('Error: Account is locked\n')
+                    print('Error: Account is locked.\n')
                     return
                 elif account.pin and not admin:
                     print('Enter account pin. You have three attempts')
@@ -56,7 +56,7 @@ def verify_account(n = 1, make_pin = False, admin = False, confirm_number = Fals
                         print('No pin associated with that account.\n')
                         return
                     if account_number != get_input('Re-enter account number: ', int):
-                        print('Error: Accounts do not match\n')
+                        print('Error: Accounts do not match.\n')
                         return
                 if need_number:
                     send.append(account_number)
@@ -70,7 +70,7 @@ def new_account():
     name = get_input("Enter account holder's name: ", str)
     valid_name = True if not re.search(r'[^a-zA-Z\s]', name) else False
     if not valid_name:
-        print('Error: Name must only contain alphabetic characters and whitespace\n')
+        print('Error: Name must only contain alphabetic characters and whitespace.\n')
         return
     start = get_input('Enter initial deposit: $', float)
     bank_data.Bank.create_account(name, start)
@@ -85,7 +85,7 @@ def add_remove_pin(account):
         if verify == pin:
             account.pin = pin
         else:
-            print('Error: Pins do not match\n')
+            print('Error: Pins do not match.\n')
             return
     print('Success.\n')
 
@@ -151,9 +151,9 @@ def import_export(is_import):
                     bank_data.Bank.create_account(name, start, status, True)
                 print('Success.\n')
             except FileNotFoundError:
-                print('Error: Invalid path\n')
+                print('Error: Invalid path.\n')
             except InvalidFileException:
-                print('Error: Invalid file format\n')
+                print('Error: Invalid file format.\n')
         else:
             bank_data.Bank.export_database()
 
@@ -165,4 +165,4 @@ def new_password():
         if desired_password == verification:
             bank_data.Bank.change_password(desired_password)
         else:
-            print('Error: Passwords do not match\n')
+            print('Error: Passwords do not match.\n')

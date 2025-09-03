@@ -16,7 +16,7 @@ class BankAccount:
 
     def deposit(self, amount, is_transfer = False):
         if amount <= 0:
-            print('Error: Deposit amount must be positive\n')
+            print('Error: Deposit amount must be positive.\n')
         else:
             self.balance += amount
             self.transactions.append({
@@ -30,10 +30,10 @@ class BankAccount:
     def withdraw(self, amount, is_transfer = False):
         action = 'Transfer' if is_transfer else 'Withdrawal'
         if amount <= 0:
-            print(f'Error: {action} amount must be positive\n')
+            print(f'Error: {action} amount must be positive.\n')
             return False
         elif amount > self.balance:
-            print(f'Error: {action} amount cannot exceed balance\n')
+            print(f'Error: {action} amount cannot exceed balance.\n')
             return False
         else:
             self.balance -= amount
@@ -77,14 +77,14 @@ class Bank:
             if not is_import:
                 print(f'Success. Account number: {account_number}\n')
         else:
-            print('Error: Initial balance must be nonnegative\n')
+            print('Error: Initial balance must be nonnegative.\n')
 
     @classmethod
     def get_account(cls, account_number):
         try:
             return cls.__stored_accounts[account_number]
         except KeyError:
-            print('Error: No such account exists\n')
+            print('Error: No such account exists.\n')
 
     @classmethod
     def get_password(cls):
