@@ -1,20 +1,21 @@
 import re, hashlib, openpyxl, bank_data
 from openpyxl.utils.exceptions import InvalidFileException
 
-def login(pin = None, admin_login = False):
-    if pin:
+def login(name = None, pin = None, admin_login = False):
+    if name:
+        verify = name; input_type = str
+    elif pin:
         verify = pin; input_type = int
     else:
         verify = bank_data.Bank.get_password(); input_type = str
     for x in range(3):
         attempt = get_input(f'Attempt {x+1}: ', input_type)
-        if not pin:
-            if hashlib.sha512(attempt.encode()).digest() == verify:
-                return True
-        elif attempt == verify:
+        if not pin and not name and hashlib.sha512(attempt.encode()).digest() == verify or attempt == verify:
             return True
         print('Incorrect')
-    print('Login failed. User lockout') if admin_login else print('Login failed.\n')
+    messages = ('Login failed. User lockout', 'Verification failed.\n', 'Login failed.\n')
+    message = messages[0] if admin_login else messages[1] if name else messages[2]
+    print(message)
     return False
 
 def get_input(prompt, cast):
@@ -24,31 +25,43 @@ def get_input(prompt, cast):
         except ValueError:
             print('Error: Invalid input')
 
-def verify_account(n = 1, confirm_number = False, need_number = False):
+def verify_account(n = 1, make_pin = False, admin = False, confirm_number = False, need_number = False):
     def decorator(func):
         def wrapper(*args):
             send = []
             for i in range(n):
-                account_type = ' ' if n == 1 else ' origin ' if n == 2 and i == 0 else ' destination '
-                account_number = get_input(f'Enter{account_type}account number: ', int)
+                if n == 1:
+                    account_type = 'account'
+                elif n == 2 and i == 0:
+                    account_type = 'origin account'
+                else:
+                    account_type = 'destination account'
+                account_number = get_input(f'Enter {account_type} number: ', int)
                 account = bank_data.Bank.get_account(account_number)
                 if not account:
                     return
-                elif account.is_locked:
+                elif account.is_locked and not admin:
                     print('Error: Account is locked\n')
                     return
-                elif account.pin:
+                elif account.pin and not admin:
                     print('Enter account pin. You have three attempts')
                     if not login(pin = account.pin):
                         return
+                elif make_pin:
+                    print('Enter account name. You have three attempts')
+                    if not login(name = account.holder):
+                        return
                 if confirm_number:
+                    if admin and not account.pin:
+                        print('No pin associated with that account.\n')
+                        return
                     if account_number != get_input('Re-enter account number: ', int):
                         print('Error: Accounts do not match\n')
                         return
                 if need_number:
                     send.append(account_number)
                 else:
-                    send.append(account_number)
+                    send.append(account)
             func(*args, *send)
         return wrapper
     return decorator
@@ -57,12 +70,12 @@ def new_account():
     name = get_input("Enter account holder's name: ", str)
     valid_name = True if not re.search(r'[^a-zA-Z\s]', name) else False
     if not valid_name:
-        print("Error: Name must only contain alphabetic characters and whitespace\n")
+        print('Error: Name must only contain alphabetic characters and whitespace\n')
         return
     start = get_input('Enter initial deposit: $', float)
     bank_data.Bank.create_account(name, start)
 
-@verify_account()
+@verify_account(make_pin = True)
 def add_remove_pin(account):
     if account.pin:
         account.pin = None
@@ -106,13 +119,20 @@ def discard_account(account_number):
     if login():
         bank_data.Bank.remove_account(account_number)
 
-@verify_account(confirm_number = True)
+@verify_account(admin = True, confirm_number = True)
 def lock_account(account):
     access = 'locked' if account.is_locked else 'unlocked'
     print(f'This account is {access}')
     print('Enter admin password to change account status. You have 3 attempts')
     if login():
         account.is_locked = not account.is_locked
+        print('Success.\n')
+
+@verify_account(admin = True, confirm_number = True)
+def force_remove_pin(account):
+    print('Enter admin password to remove account pin')
+    if login():
+        account.pin = None
         print('Success.\n')
 
 def import_export(is_import):
